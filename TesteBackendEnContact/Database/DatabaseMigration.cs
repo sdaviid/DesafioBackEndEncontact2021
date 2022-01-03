@@ -10,6 +10,7 @@ namespace TesteBackendEnContact.Database
             Create.Table("ContactBook")
                 .WithColumn("Id").AsInt32().PrimaryKey().Identity()
                 .WithColumn("Name").AsString(50).NotNullable()
+                .WithColumn("CompanyId").AsInt32().Nullable()
             ;
 
             Create.Table("Contact")
@@ -24,8 +25,10 @@ namespace TesteBackendEnContact.Database
 
             Create.Table("Company")
                 .WithColumn("Id").AsInt32().PrimaryKey().Identity()
-                .WithColumn("ContactBookId").AsInt32().NotNullable()
                 .WithColumn("Name").AsString(50).NotNullable()
+                .WithColumn("CNPJ").AsString(50).NotNullable()
+                .WithColumn("Password").AsString(50).NotNullable()
+                .WithColumn("API").AsString(255).NotNullable()
             ;
         }
 

@@ -9,6 +9,11 @@ using TesteBackendEnContact.Core.Domain.ContactBook.Company;
 using TesteBackendEnContact.Core.Interface.ContactBook.Company;
 using TesteBackendEnContact.Database;
 using TesteBackendEnContact.Repository.Interface;
+using TesteBackendEnContact.Core.Domain.ContactBook;
+using TesteBackendEnContact.Core.Interface.ContactBook;
+using TesteBackendEnContact.Repository;
+using System;
+using TesteBackendEnContact.Core;
 
 namespace TesteBackendEnContact.Repository
 {
@@ -27,7 +32,15 @@ namespace TesteBackendEnContact.Repository
             var dao = new CompanyDao(company);
 
             if (dao.Id == 0)
+            {
+                string ApiKeyUnix = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds().ToString();
+                dao.API = Utils.CreateMD5(ApiKeyUnix);
+                dao.Password = Utils.CreateMD5(dao.Password);
+                //ContactBookRepository BookContact = new ContactBookRepository(databaseConfig);
+                //IContactBook BookContactData = await BookContact.SaveAsync(new ContactBook(0, dao.Name));
+                //dao.ContactBookId = BookContactData.Id;
                 dao.Id = await connection.InsertAsync(dao);
+            }
             else
                 await connection.UpdateAsync(dao);
 
@@ -37,6 +50,7 @@ namespace TesteBackendEnContact.Repository
         public async Task DeleteAsync(int id)
         {
             using var connection = new SqliteConnection(databaseConfig.ConnectionString);
+            connection.Open();
             using var transaction = connection.BeginTransaction();
 
             var sql = new StringBuilder();
@@ -44,24 +58,35 @@ namespace TesteBackendEnContact.Repository
             sql.AppendLine("UPDATE Contact SET CompanyId = null WHERE CompanyId = @id;");
 
             await connection.ExecuteAsync(sql.ToString(), new { id }, transaction);
+            transaction.Commit();
         }
 
-        public async Task<IEnumerable<ICompany>> GetAllAsync()
+        public async Task<IEnumerable<ICompany>> GetAllAsync(string API_KEY)
         {
             using var connection = new SqliteConnection(databaseConfig.ConnectionString);
 
-            var query = "SELECT * FROM Company";
+            var query = string.Format("SELECT * FROM Company WHERE API = '{0}';", API_KEY);
             var result = await connection.QueryAsync<CompanyDao>(query);
 
             return result?.Select(item => item.Export());
         }
 
-        public async Task<ICompany> GetAsync(int id)
+        public async Task<ICompany> Login(string CNPJ, string Password)
+        {
+            Password = Utils.CreateMD5(Password);
+            using var connection = new SqliteConnection(databaseConfig.ConnectionString);
+            string query = string.Format("SELECT * FROM Company WHERE CNPJ = '{0}' AND Password = '{1}';", CNPJ, Password);
+            Console.WriteLine(query);
+            var result = await connection.QuerySingleOrDefaultAsync<CompanyDao>(query, new { CNPJ, Password });
+            return result?.Export();
+        }
+
+        public async Task<ICompany> GetAsync(int id, string API_KEY)
         {
             using var connection = new SqliteConnection(databaseConfig.ConnectionString);
 
-            var query = "SELECT * FROM Conpany where Id = @id";
-            var result = await connection.QuerySingleOrDefaultAsync<CompanyDao>(query, new { id });
+            var query = string.Format("SELECT * FROM Company where Id = {0} AND API = '{1}';", id.ToString(), API_KEY);
+            var result = await connection.QuerySingleOrDefaultAsync<CompanyDao>(query);
 
             return result?.Export();
         }
@@ -72,8 +97,10 @@ namespace TesteBackendEnContact.Repository
     {
         [Key]
         public int Id { get; set; }
-        public int ContactBookId { get; set; }
         public string Name { get; set; }
+        public string CNPJ {get;set;}
+        public string Password {get;set;}
+        public string API { get; set; }
 
         public CompanyDao()
         {
@@ -82,10 +109,12 @@ namespace TesteBackendEnContact.Repository
         public CompanyDao(ICompany company)
         {
             Id = company.Id;
-            ContactBookId = company.ContactBookId;
             Name = company.Name;
+            CNPJ = company.CNPJ;
+            Password = company.Password;
+            API = company.API;
         }
 
-        public ICompany Export() => new Company(Id, ContactBookId, Name);
+        public ICompany Export() => new Company(Id, Name, CNPJ, Password, API);
     }
 }

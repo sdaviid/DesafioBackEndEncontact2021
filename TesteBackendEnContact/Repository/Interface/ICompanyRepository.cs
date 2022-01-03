@@ -8,7 +8,8 @@ namespace TesteBackendEnContact.Repository.Interface
     {
         Task<ICompany> SaveAsync(ICompany company);
         Task DeleteAsync(int id);
-        Task<IEnumerable<ICompany>> GetAllAsync();
-        Task<ICompany> GetAsync(int id);
+        Task<IEnumerable<ICompany>> GetAllAsync(string API_KEY);
+        Task<ICompany> GetAsync(int id, string API_KEY);
+        Task<ICompany> Login(string name, string senha);
     }
 }

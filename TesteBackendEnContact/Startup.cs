@@ -1,5 +1,6 @@
 using FluentMigrator.Runner;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,6 +11,8 @@ using System;
 using TesteBackendEnContact.Database;
 using TesteBackendEnContact.Repository;
 using TesteBackendEnContact.Repository.Interface;
+using System;
+using System.IO;
 
 namespace TesteBackendEnContact
 {
@@ -18,6 +21,7 @@ namespace TesteBackendEnContact
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
+            authHandler.Configuration = configuration;
         }
 
         public IConfiguration Configuration { get; }
@@ -41,6 +45,7 @@ namespace TesteBackendEnContact
             services.AddSingleton(new DatabaseConfig { ConnectionString = Configuration.GetConnectionString("DefaultConnection") });
             services.AddScoped<IContactBookRepository, ContactBookRepository>();
             services.AddScoped<ICompanyRepository, CompanyRepository>();
+            services.AddScoped<IContactRepository, ContactRepository>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

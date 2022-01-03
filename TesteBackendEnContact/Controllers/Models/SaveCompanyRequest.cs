@@ -8,11 +8,12 @@ namespace TesteBackendEnContact.Controllers.Models
     {
         public int Id { get; set; }
         [Required]
-        public int ContactBookId { get; set; }
-        [Required]
         [StringLength(50)]
         public string Name { get; set; }
+        public string CNPJ {get;set;}
+        public string Password {get;set;}
+        public string API { get; set; }
 
-        public ICompany ToCompany() => new Company(Id, ContactBookId, Name);
+        public ICompany ToCompany() => new Company(Id, Name, CNPJ, Password, API);
     }
 }

@@ -3,7 +3,9 @@
     public interface ICompany
     {
         int Id { get; }
-        int ContactBookId { get; }
         string Name { get; }
+        string CNPJ {get;}
+        string Password {get;}
+        string API { get; }
     }
 }

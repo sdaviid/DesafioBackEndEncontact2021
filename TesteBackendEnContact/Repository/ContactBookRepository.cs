@@ -3,11 +3,13 @@ using Dapper.Contrib.Extensions;
 using Microsoft.Data.Sqlite;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using TesteBackendEnContact.Core.Domain.ContactBook;
 using TesteBackendEnContact.Core.Interface.ContactBook;
 using TesteBackendEnContact.Database;
 using TesteBackendEnContact.Repository.Interface;
+using System;
 
 namespace TesteBackendEnContact.Repository
 {
@@ -21,50 +23,74 @@ namespace TesteBackendEnContact.Repository
         }
 
 
-        public async Task<IContactBook> SaveAsync(IContactBook contactBook)
+        public async Task<IContactBook> SaveAsync(IContactBook contactBook, int IdCompany)
         {
             using var connection = new SqliteConnection(databaseConfig.ConnectionString);
             var dao = new ContactBookDao(contactBook);
 
-            dao.Id = await connection.InsertAsync(dao);
+            if (dao.Id == 0)
+            {
+                dao.CompanyId = IdCompany;
+                dao.Id = await connection.InsertAsync(dao);
+            }
+            else
+                await connection.UpdateAsync(dao);
 
             return dao.Export();
+
+            // dao.Id = await connection.InsertAsync(dao);
+
+            // return dao.Export();
         }
 
 
         public async Task DeleteAsync(int id)
         {
             using var connection = new SqliteConnection(databaseConfig.ConnectionString);
+            connection.Open();
+            using var transaction = connection.BeginTransaction();
+            var sql = new StringBuilder();
+            sql.AppendLine("DELETE FROM ContactBook WHERE Id = @id;");
+
+            await connection.ExecuteAsync(sql.ToString(), new { id }, transaction);
+            transaction.Commit();
 
             // TODO
-            var sql = "";
+            // var sql = "";
 
-            await connection.ExecuteAsync(sql);
+            // await connection.ExecuteAsync(sql);
         }
 
 
 
 
-        public async Task<IEnumerable<IContactBook>> GetAllAsync()
+        public async Task<IEnumerable<IContactBookDetails>> GetAllAsync(string API_KEY)
         {
             using var connection = new SqliteConnection(databaseConfig.ConnectionString);
+            var sql = new StringBuilder();
+            string query = string.Format("SELECT A.Id, {0}, A.CompanyId, COUNT(C.Id) As TotalContacts FROM ContactBook A LEFT JOIN Company B ON A.CompanyID = B.Id LEFT JOIN Contact C ON A.Id = C.ContactBookId WHERE 1=1", 
+                (string.IsNullOrEmpty(API_KEY) ? "SUBSTR(A.Name, 1, (LENGTH(A.Name) / 2)) || '*******' AS Name" : "A.Name")
+            );
+            sql.AppendLine(query);
+            if(!string.IsNullOrEmpty(API_KEY))
+                sql.AppendLine(string.Format("AND B.API = '{0}'", API_KEY));
+            sql.AppendLine("GROUP BY A.Id");
+            Console.WriteLine(sql.ToString());
+            var result = await connection.QueryAsync<ContactBookDaoList>(sql.ToString());
 
-            var query = "SELECT * FROM ContactBook";
-            var result = await connection.QueryAsync<ContactBookDao>(query);
-
-            var returnList = new List<IContactBook>();
+            var returnList = new List<IContactBookDetails>();
 
             foreach (var AgendaSalva in result.ToList())
             {
-                IContactBook Agenda = new ContactBook(AgendaSalva.Id, AgendaSalva.Name.ToString());
+                IContactBookDetails Agenda = new ContactBookDetails(AgendaSalva.Id, AgendaSalva.Name.ToString(), AgendaSalva.CompanyId, AgendaSalva.TotalContacts);
                 returnList.Add(Agenda);
             }
 
             return returnList.ToList();
         }
-        public async Task<IContactBook> GetAsync(int id)
+        public async Task<IContactBookDetails> GetAsync(int id, string API_KEY)
         {
-            var list = await GetAllAsync();
+            var list = await GetAllAsync(API_KEY);
 
             return list.ToList().Where(item => item.Id == id).FirstOrDefault();
         }
@@ -76,6 +102,7 @@ namespace TesteBackendEnContact.Repository
         [Key]
         public int Id { get; set; }
         public string Name { get; set; }
+        public int CompanyId {get; set;}
 
         public ContactBookDao()
         {
@@ -84,9 +111,35 @@ namespace TesteBackendEnContact.Repository
         public ContactBookDao(IContactBook contactBook)
         {
             Id = contactBook.Id;
-            Name = Name;
+            Name = contactBook.Name;
+            CompanyId = contactBook.CompanyId;
         }
 
-        public IContactBook Export() => new ContactBook(Id, Name);
+        public IContactBook Export() => new ContactBook(Id, Name, CompanyId);
+    }
+
+
+    [Table("ContactBook")]
+    public class ContactBookDaoList : IContactBookDetails
+    {
+        [Key]
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public int CompanyId {get; set;}
+        public int TotalContacts {get;set;}
+
+        public ContactBookDaoList()
+        {
+        }
+
+        public ContactBookDaoList(IContactBookDetails contactBookDetails)
+        {
+            Id = contactBookDetails.Id;
+            Name = contactBookDetails.Name;
+            CompanyId = contactBookDetails.CompanyId;
+            TotalContacts = contactBookDetails.TotalContacts;
+        }
+
+        public IContactBookDetails Export() => new ContactBookDetails(Id, Name, CompanyId, TotalContacts);
     }
 }
