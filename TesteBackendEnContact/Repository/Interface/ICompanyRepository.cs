@@ -6,10 +6,10 @@ namespace TesteBackendEnContact.Repository.Interface
 {
     public interface ICompanyRepository
     {
-        Task<ICompany> SaveAsync(ICompany company);
-        Task DeleteAsync(int id);
-        Task<IEnumerable<ICompany>> GetAllAsync(string API_KEY);
-        Task<ICompany> GetAsync(int id, string API_KEY);
+        Task<dynamic> SaveAsync(dynamic company);
+        Task<dynamic> DeleteAsync(int id, string API_KEY, int id_company);
+        Task<IEnumerable<ICompanyList>> GetAllAsync();
+        Task<dynamic> GetAsync(int id, string API_KEY, int id_company=0);
         Task<ICompany> Login(string name, string senha);
     }
 }

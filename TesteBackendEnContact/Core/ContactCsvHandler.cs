@@ -82,7 +82,7 @@ public class ContactCsvHandler
             if(column_count == 5)
                 res = new ContactAdd(Int32.Parse(temp["ContactBookId"]), temp["Name"], temp["Phone"], temp["Email"], temp["Address"]);
             else
-                res = new ContactAdd(-1, "", "", "", "");
+                res = new ContactAdd(-1, line, "", "", "");
             this.list_contact.Add(res);
         }
     } 

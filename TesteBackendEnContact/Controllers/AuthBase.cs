@@ -31,8 +31,22 @@ public static class authHandler
     {
         using var connection = new SqliteConnection(authHandler.Configuration.GetConnectionString("DefaultConnection"));
         connection.Open();
-        string query = string.Format("SELECT Id, Name, CNPJ, Password, API FROM COMPANY WHERE API = '{0}';", API_KEY);
-        SqliteCommand cmd = new SqliteCommand(query, connection);
+        
+
+        //PREVENIR SQL INJECTION DE FORMA CAGADA PQ TODO O RESTO TA CONCATENANDO DE FORMA RUIM E EU QUERO ENTREGAR ALGUMA COISA LOGO
+        SqliteCommand cmd = new SqliteCommand("SELECT Id, Name, CNPJ, Password, API FROM COMPANY WHERE API = @api", connection);
+        cmd.Parameters.Add(new SqliteParameter("api", API_KEY));
+        string tmp = cmd.CommandText.ToString();
+        foreach (SqliteParameter p in cmd.Parameters) {
+            tmp = tmp.Replace('@' + p.ParameterName.ToString(),"'" + p.Value.ToString() + "'");
+        }
+        Console.WriteLine("ccmd auth");
+        Console.WriteLine(cmd.CommandText);
+        Console.WriteLine("ccmd auth111");
+        Console.WriteLine(tmp);
+        Console.WriteLine("ccmd auth");
+
+        
         SqliteDataReader reader = cmd.ExecuteReader();
         bool HasRows = reader.HasRows;
         if(HasRows)

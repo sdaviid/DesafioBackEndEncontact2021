@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using TesteBackendEnContact.Controllers.Models;
 using TesteBackendEnContact.Core.Interface.ContactBook.Company;
 using TesteBackendEnContact.Repository.Interface;
-
+using TesteBackendEnContact.Core.Domain.ContactBook.Company;
 
 namespace TesteBackendEnContact.ControllersNonAuth
 {
@@ -21,21 +21,28 @@ namespace TesteBackendEnContact.ControllersNonAuth
             _logger = logger;
         }
 
-        [HttpPost]
-        public async Task<ActionResult<ICompany>> Post(SaveCompanyRequest company, [FromServices] ICompanyRepository companyRepository)
+        [HttpPost("/company/register")]
+        public async Task<dynamic> Post(CompanyAdd company, [FromServices] ICompanyRepository companyRepository)
         {
-            return Ok(await companyRepository.SaveAsync(company.ToCompany()));
+            dynamic resposta = await companyRepository.SaveAsync(company);
+            if(resposta is ICompany)
+                return resposta;
+            else
+                return StatusCode(StatusCodes.Status400BadRequest, resposta);
         }
 
-        [HttpPost("/Company/login")]
+        [HttpPost("/company/login")]
         public async Task<ActionResult<ICompany>> Login(string CNPJ, string Password, [FromServices] ICompanyRepository companyRepository)
         {
             var result = await companyRepository.Login(CNPJ, Password);
-            if(result != null)
-            {
-                Response.Headers.Add("X-Total-Count", "12");
-            } 
             return Ok(result);
+        }
+
+
+        [HttpGet("/company/list")]
+        public async Task<IEnumerable<ICompanyList>> Get([FromServices] ICompanyRepository companyRepository)
+        {
+            return await companyRepository.GetAllAsync();
         }
     }
 }
@@ -53,25 +60,33 @@ namespace TesteBackendEnContact.ControllersAuth
         public CompanyController(ILogger<CompanyController> logger)
         {
             _logger = logger;
+            KILL_NO_KEY = false;
         }
 
 
-        [HttpDelete]
-        public async Task Delete(int id, [FromServices] ICompanyRepository companyRepository)
+        [HttpDelete("/company/delete")]
+        public async Task<dynamic> Delete(int id, [FromServices] ICompanyRepository companyRepository)
         {
-            await companyRepository.DeleteAsync(id);
+            if(this.HAS_USER == true)
+            {
+                return await companyRepository.DeleteAsync(id, this.API_KEY, this.USER_DATA_COMPANY.Id);
+            }
+            return StatusCode(StatusCodes.Status401Unauthorized, new {error = true, error_msg = "Invalid API_KEY"});
         }
 
-        [HttpGet]
-        public async Task<IEnumerable<ICompany>> Get([FromServices] ICompanyRepository companyRepository)
-        {
-            return await companyRepository.GetAllAsync(this.API_KEY);
-        }
+        // [HttpGet("/company/list")]
+        // public async Task<IEnumerable<ICompanyList>> Get([FromServices] ICompanyRepository companyRepository)
+        // {
+        //     return await companyRepository.GetAllAsync(this.API_KEY);
+        // }
 
-        [HttpGet("{id}")]
-        public async Task<ICompany> Get(int id, [FromServices] ICompanyRepository companyRepository)
+        [HttpGet("/company/get/{id}")]
+        public async Task<dynamic> Get(int id, [FromServices] ICompanyRepository companyRepository)
         {
-            return await companyRepository.GetAsync(id, this.API_KEY);
+            int id_company = 0;
+            if(this.HAS_USER == true)
+                id_company = this.USER_DATA_COMPANY.Id;
+            return await companyRepository.GetAsync(id, this.API_KEY, id_company);
         }
     }
 }

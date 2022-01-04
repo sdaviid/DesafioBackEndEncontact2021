@@ -22,7 +22,7 @@ namespace TesteBackendEnContact.ControllersAuth
             KILL_NO_KEY = false;
         }
 
-        [HttpPost]
+        [HttpPost("/contactbook/create")]
         public async Task<IContactBook> Post(ContactBook contactBook, [FromServices] IContactBookRepository contactBookRepository)
         {
             if(this.HAS_USER == true)
@@ -30,19 +30,23 @@ namespace TesteBackendEnContact.ControllersAuth
             return null;
         }
 
-        [HttpDelete]
-        public async Task Delete(int id, [FromServices] IContactBookRepository contactBookRepository)
+        [HttpDelete("/contactbook/delete")]
+        public async Task<dynamic> Delete(int id, [FromServices] IContactBookRepository contactBookRepository)
         {
-            await contactBookRepository.DeleteAsync(id);
+            if(this.HAS_USER == true)
+            {
+                return await contactBookRepository.DeleteAsync(id, this.API_KEY);
+            }
+            return StatusCode(StatusCodes.Status401Unauthorized, new {error = true, error_msg = "Invalid API_KEY"});
         }
 
-        [HttpGet]
+        [HttpGet("/contactbook/list")]
         public async Task<IEnumerable<IContactBookDetails>> Get([FromServices] IContactBookRepository contactBookRepository)
         {
             return await contactBookRepository.GetAllAsync(this.API_KEY);
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("/contactbook/get/{id}")]
         public async Task<dynamic> Get(int id, [FromServices] IContactBookRepository contactBookRepository)
         {
             dynamic resposta = await contactBookRepository.GetAsync(id, this.API_KEY);

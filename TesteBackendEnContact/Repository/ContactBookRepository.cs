@@ -44,21 +44,26 @@ namespace TesteBackendEnContact.Repository
         }
 
 
-        public async Task DeleteAsync(int id)
+        public async Task<dynamic> DeleteAsync(int id, string API_KEY)
         {
-            using var connection = new SqliteConnection(databaseConfig.ConnectionString);
-            connection.Open();
-            using var transaction = connection.BeginTransaction();
-            var sql = new StringBuilder();
-            sql.AppendLine("DELETE FROM ContactBook WHERE Id = @id;");
+            dynamic Contatobookdetalhes = await GetAsync(id, API_KEY);
+            if(Contatobookdetalhes is IContactBookDetails)
+            {
+                using var connection = new SqliteConnection(databaseConfig.ConnectionString);
+                connection.Open();
+                using var transaction = connection.BeginTransaction();
+                var sql = new StringBuilder();
+                sql.AppendLine("DELETE FROM ContactBook WHERE Id = @id;");
+                sql.AppendLine("DELETE FROM Contact WHERE ContactBookId = @id;");
 
-            await connection.ExecuteAsync(sql.ToString(), new { id }, transaction);
-            transaction.Commit();
-
-            // TODO
-            // var sql = "";
-
-            // await connection.ExecuteAsync(sql);
+                await connection.ExecuteAsync(sql.ToString(), new { id }, transaction);
+                transaction.Commit();
+                return new {error = false, error_msg = ""};
+            }
+            else
+            {
+                return new {error = true, error_msg = "ID contactBook doesnt belong to company"};
+            }
         }
 
 

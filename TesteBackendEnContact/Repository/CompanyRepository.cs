@@ -13,7 +13,7 @@ using TesteBackendEnContact.Core.Domain.ContactBook;
 using TesteBackendEnContact.Core.Interface.ContactBook;
 using TesteBackendEnContact.Repository;
 using System;
-using TesteBackendEnContact.Core;
+//using TesteBackendEnContact.Core;
 
 namespace TesteBackendEnContact.Repository
 {
@@ -26,19 +26,26 @@ namespace TesteBackendEnContact.Repository
             this.databaseConfig = databaseConfig;
         }
 
-        public async Task<ICompany> SaveAsync(ICompany company)
+        public async Task<dynamic> SaveAsync(dynamic company)
         {
             using var connection = new SqliteConnection(databaseConfig.ConnectionString);
-            var dao = new CompanyDao(company);
+            var dao = new CompanyDao(new Company(0, company.Name, company.CNPJ, company.Password, ""));
 
             if (dao.Id == 0)
             {
-                string ApiKeyUnix = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds().ToString();
-                dao.API = Utils.CreateMD5(ApiKeyUnix);
-                dao.Password = Utils.CreateMD5(dao.Password);
-                //ContactBookRepository BookContact = new ContactBookRepository(databaseConfig);
-                //IContactBook BookContactData = await BookContact.SaveAsync(new ContactBook(0, dao.Name));
-                //dao.ContactBookId = BookContactData.Id;
+                var empresas = await GetAllAsync();
+                foreach(var i in empresas.ToList())
+                {
+                    ICompanyList t = new CompanyList(i.Id, i.Name, i.CNPJ);
+                    if(t.CNPJ == dao.CNPJ)
+                    {
+                        return new {error = true, error_msg = "CNPJ already in use"};
+                    }
+                }
+                string ApiKeyUnix = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds().ToString(); //PEGAR TIMEUNIX PRA GERAR MD5
+                dao.API = Utils.CreateMD5(ApiKeyUnix); //GERAR MD5 PRA KEY DA API
+                dao.Password = Utils.CreateMD5(dao.Password); //CONVERTER SENHA PRA MD5 (NAO UMA BOA PRATICA, MAS PRA SISTEMA SIMPLES...)
+                
                 dao.Id = await connection.InsertAsync(dao);
             }
             else
@@ -47,26 +54,36 @@ namespace TesteBackendEnContact.Repository
             return dao.Export();
         }
 
-        public async Task DeleteAsync(int id)
+        public async Task<dynamic> DeleteAsync(int id, string API_KEY, int id_company)
         {
-            using var connection = new SqliteConnection(databaseConfig.ConnectionString);
-            connection.Open();
-            using var transaction = connection.BeginTransaction();
+            dynamic CompanyData = await GetAsync(id, API_KEY, id_company);
+            if(CompanyData is ICompany)
+            {
+                using var connection = new SqliteConnection(databaseConfig.ConnectionString);
+                connection.Open();
+                using var transaction = connection.BeginTransaction();
 
-            var sql = new StringBuilder();
-            sql.AppendLine("DELETE FROM Company WHERE Id = @id;");
-            sql.AppendLine("UPDATE Contact SET CompanyId = null WHERE CompanyId = @id;");
+                var sql = new StringBuilder();
+                sql.AppendLine("DELETE FROM Company WHERE Id = @id;");
+                sql.AppendLine("DELETE FROM Contact WHERE CompanyId = @id;");
+                sql.AppendLine("DELETE FROM ContactBook WHERE CompanyId = @id;");
 
-            await connection.ExecuteAsync(sql.ToString(), new { id }, transaction);
-            transaction.Commit();
+                await connection.ExecuteAsync(sql.ToString(), new { id }, transaction);
+                transaction.Commit();
+                return new {error = false, error_msg = ""};
+            }
+            else
+            {
+                return new {error = true, error_msg = "ID company doesnt belong to company"};
+            }
         }
 
-        public async Task<IEnumerable<ICompany>> GetAllAsync(string API_KEY)
+        public async Task<IEnumerable<ICompanyList>> GetAllAsync()
         {
             using var connection = new SqliteConnection(databaseConfig.ConnectionString);
 
-            var query = string.Format("SELECT * FROM Company WHERE API = '{0}';", API_KEY);
-            var result = await connection.QueryAsync<CompanyDao>(query);
+            var query = string.Format("SELECT Id, Name, CNPJ FROM Company;");
+            var result = await connection.QueryAsync<CompanyDaoList>(query);
 
             return result?.Select(item => item.Export());
         }
@@ -75,18 +92,42 @@ namespace TesteBackendEnContact.Repository
         {
             Password = Utils.CreateMD5(Password);
             using var connection = new SqliteConnection(databaseConfig.ConnectionString);
-            string query = string.Format("SELECT * FROM Company WHERE CNPJ = '{0}' AND Password = '{1}';", CNPJ, Password);
-            Console.WriteLine(query);
-            var result = await connection.QuerySingleOrDefaultAsync<CompanyDao>(query, new { CNPJ, Password });
+            var sql = new StringBuilder();
+            //PREVENIR SQL INJECTION NO LOGIN...
+            sql.AppendLine("SELECT * FROM Company WHERE CNPJ = @CNPJ AND Password = @Password;");
+
+            //string query = string.Format("SELECT * FROM Company WHERE CNPJ = '{0}' AND Password = '{1}';", CNPJ, Password);
+            //Console.WriteLine(query);
+            //var result = await connection.QuerySingleOrDefaultAsync<CompanyDao>(query, new { CNPJ, Password });
+            var result = await connection.QuerySingleOrDefaultAsync<CompanyDao>(sql.ToString(), new { CNPJ, Password });
             return result?.Export();
         }
 
-        public async Task<ICompany> GetAsync(int id, string API_KEY)
+        public async Task<dynamic> GetAsync(int id, string API_KEY, int id_company=0)
         {
             using var connection = new SqliteConnection(databaseConfig.ConnectionString);
-
-            var query = string.Format("SELECT * FROM Company where Id = {0} AND API = '{1}';", id.ToString(), API_KEY);
-            var result = await connection.QuerySingleOrDefaultAsync<CompanyDao>(query);
+            bool has_full_data = false;
+            var sql = new StringBuilder();
+            var query = "SELECT Id, Name, CNPJ";
+            sql.AppendLine(query);
+            var query_end = new StringBuilder();
+            query_end.AppendLine(string.Format("FROM Company WHERE ID = {0}", id));
+            if((!string.IsNullOrEmpty(API_KEY)) && (id_company == id))
+            {
+                
+                has_full_data = true;
+                sql.AppendLine(", Password, API");
+                query_end.AppendLine(string.Format("AND API = '{0}'", API_KEY));
+            }
+            sql.AppendLine(query_end.ToString());
+            dynamic result;
+            Console.WriteLine(sql.ToString());
+            if(has_full_data == true)
+                result = await connection.QuerySingleOrDefaultAsync<CompanyDao>(sql.ToString());
+            else
+                result = await connection.QuerySingleOrDefaultAsync<CompanyDaoList>(sql.ToString());
+            //var query = string.Format("SELECT Id, Name, CNPJ FROM Company where Id = {0} AND API = '{1}';", id.ToString(), API_KEY);
+            //var result = await connection.QuerySingleOrDefaultAsync<CompanyDao>(query);
 
             return result?.Export();
         }
@@ -116,5 +157,50 @@ namespace TesteBackendEnContact.Repository
         }
 
         public ICompany Export() => new Company(Id, Name, CNPJ, Password, API);
+    }
+
+
+    [Table("Company")]
+    public class CompanyDaoList : ICompanyList
+    {
+        [Key]
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string CNPJ {get;set;}
+
+        public CompanyDaoList()
+        {
+        }
+
+        public CompanyDaoList(ICompanyList company)
+        {
+            Id = company.Id;
+            Name = company.Name;
+            CNPJ = company.CNPJ;
+        }
+
+        public ICompanyList Export() => new CompanyList(Id, Name, CNPJ);
+    }
+
+
+    [Table("Company")]
+    public class CompanyDaoAdd : ICompanyAdd
+    {
+        public string Name { get; set; }
+        public string CNPJ {get;set;}
+        public string Password {get;set;}
+
+        public CompanyDaoAdd()
+        {
+        }
+
+        public CompanyDaoAdd(ICompanyAdd company)
+        {
+            Name = company.Name;
+            CNPJ = company.CNPJ;
+            Password = company.Password;
+        }
+
+        public ICompanyAdd Export() => new CompanyAdd(Name, CNPJ, Password);
     }
 }

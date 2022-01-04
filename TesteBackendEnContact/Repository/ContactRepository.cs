@@ -69,25 +69,50 @@ namespace TesteBackendEnContact.Repository
         }
 
 
-        public async Task DeleteAsync(int id)
+        public async Task<dynamic> DeleteAsync(int id, string API_KEY)
         {
-            using var connection = new SqliteConnection(databaseConfig.ConnectionString);
-            connection.Open();
-            using var transaction = connection.BeginTransaction();
+            IContact ContatoData = await GetAsync(id, API_KEY);
+            if(ContatoData is IContact)
+            {
+                using var connection = new SqliteConnection(databaseConfig.ConnectionString);
+                connection.Open();
+                using var transaction = connection.BeginTransaction();
 
-            var sql = new StringBuilder();
-            sql.AppendLine("DELETE FROM Contact WHERE Id = @id;");
-            
+                var sql = new StringBuilder();
+                sql.AppendLine("DELETE FROM Contact WHERE Id = @id;");
+                
 
-            await connection.ExecuteAsync(sql.ToString(), new { id }, transaction);
-            transaction.Commit();
+                await connection.ExecuteAsync(sql.ToString(), new { id }, transaction);
+                transaction.Commit();
+                return new {error = false, error_msg = ""};
+            }
+            else
+            {
+                return new {error = true, error_msg = "ID contact doesnt belong to company"};
+            }
         }
 
 
         public async Task<IEnumerable<IContact>> GetAllAsync(string API_KEY)
         {
             using var connection = new SqliteConnection(databaseConfig.ConnectionString);
-            string query = string.Format("SELECT A.Id, A.ContactBookId, A.CompanyId, A.Name, A.Phone, A.Email, A.Address FROM Contact A LEFT JOIN Company B ON A.CompanyId = B.ID WHERE B.API = '{0}';", API_KEY);
+
+            SqliteCommand cmd = new SqliteCommand("SELECT A.Id, A.ContactBookId, A.CompanyId, A.Name, A.Phone, A.Email, A.Address FROM Contact A LEFT JOIN Company B ON A.CompanyId = B.ID WHERE B.API = @api", connection);
+            cmd.Parameters.Add(new SqliteParameter("api", API_KEY));
+            
+            string query = Utils.buildQuerySqliteCmd(cmd);
+            //string query = string.Format("SELECT A.Id, A.ContactBookId, A.CompanyId, A.Name, A.Phone, A.Email, A.Address FROM Contact A LEFT JOIN Company B ON A.CompanyId = B.ID WHERE B.API = '{0}';", API_KEY);
+
+            //var sql = new StringBuilder();
+            //sql.AppendLine("SELECT A.Id, A.ContactBookId, A.CompanyId, A.Name, A.Phone, A.Email, A.Address FROM Contact A LEFT JOIN Company B ON A.CompanyId = B.ID WHERE B.API = @API_KEY;");
+            //SqliteCommand cmd = new SqliteCommand(@"SELECT A.Id, A.ContactBookId, A.CompanyId, A.Name, A.Phone, A.Email, A.Address FROM Contact A LEFT JOIN Company B ON A.CompanyId = B.ID WHERE B.API = @api", connection);
+            //cmd.Parameters.Add(new SqliteParameter("api", API_KEY));
+            //var result = await connection.QueryAsync<ContactDao>(sql.ToString(), new { API_KEY });
+            //var result = await connection.QueryAsync<ContactDao>(cmd.CommandText);
+
+
+
+
             var result = await connection.QueryAsync<ContactDao>(query);
 
             return result?.Select(item => item.Export());
@@ -126,27 +151,43 @@ namespace TesteBackendEnContact.Repository
             );
             sql.AppendLine(query);
             if((PublicSearch == false) && (!string.IsNullOrEmpty(API_KEY)))
-                sql.AppendLine(string.Format("AND B.API = '{0}'", API_KEY));
+            {
+                sql.AppendLine(string.Format("AND B.API = '{0}'", API_KEY.Replace("'", "\"")));
+            }
             if(!String.IsNullOrEmpty(Convert.ToString(ContactName)))
             {
-                sql.AppendLine(string.Format("AND A.Name LIKE '%{0}%'", ContactName));
+                sql.AppendLine(string.Format("AND A.Name LIKE '%{0}%'", ContactName.Replace("'", "\"")));
             }
             if(!string.IsNullOrEmpty(Convert.ToString(ContactPhone)))
-                sql.AppendLine(string.Format("AND A.Phone LIKE '%{0}%'", ContactPhone));
+            {
+                sql.AppendLine(string.Format("AND A.Phone LIKE '%{0}%'", ContactPhone.Replace("'", "\"")));
+            }
             if(!string.IsNullOrEmpty(Convert.ToString(ContactEmail)))
-                sql.AppendLine(string.Format("AND A.Email LIKE '%{0}%'", ContactEmail));
+            {
+                sql.AppendLine(string.Format("AND A.Email LIKE '%{0}%'", ContactEmail.Replace("'", "\"")));
+            }
             if(!string.IsNullOrEmpty(Convert.ToString(ContactAddress)))
-                sql.AppendLine(string.Format("AND A.Address LIKE '%{0}%'", ContactAddress));
+            {
+                sql.AppendLine(string.Format("AND A.Address LIKE '%{0}%'", ContactAddress.Replace("'", "\"")));
+            }
             if(!string.IsNullOrEmpty(Convert.ToString(ContactCompany)))
-                sql.AppendLine(string.Format("AND B.Name LIKE '%{0}%'", ContactCompany));
+            {
+                sql.AppendLine(string.Format("AND B.Name LIKE '%{0}%'", ContactCompany.Replace("'", "\"")));
+            }
             if(ContactBookId > 0)
-                sql.AppendLine(string.Format("AND A.ContactBookId = {0}", ContactBookId));
+            {
+                sql.AppendLine(string.Format("AND A.ContactBookId = {0}", ContactBookId.ToString().Replace("'", "\"")));
+            }
             if(!string.IsNullOrEmpty(Convert.ToString(ContactBookName)))
-                sql.AppendLine(string.Format("AND C.Name LIKE '%{0}%'", ContactBookName));
+            {
+                sql.AppendLine(string.Format("AND C.Name LIKE '%{0}%'", ContactBookName.Replace("'", "\"")));
+            }
             sql.AppendLine("AND A.Id IS NOT NULL");
             //sql.AppendLine("LIMIT 10");
             //sql.AppendLine(string.Format("OFFSET {0}", index_start));
             sql.AppendLine("ORDER BY A.Id");
+
+            
             Console.WriteLine(sql.ToString());
             var result = await connection.QueryAsync<ContactDao>(sql.ToString());
 

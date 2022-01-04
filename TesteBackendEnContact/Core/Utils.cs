@@ -1,5 +1,7 @@
 using System;
 using System.Text;
+using System.Collections.Generic;
+using Microsoft.Data.Sqlite;
 
 
 public class Utils
@@ -20,5 +22,16 @@ public class Utils
             }
             return sb.ToString();
         }
+    }
+
+    public static string buildQuerySqliteCmd(SqliteCommand cmd)
+    {
+        string tmp = cmd.CommandText.ToString();
+        Console.WriteLine(tmp);
+        foreach (SqliteParameter p in cmd.Parameters) {
+            tmp = tmp.Replace('@' + p.ParameterName.ToString(),"'" + p.Value.ToString() + "'");
+        }
+        Console.WriteLine(tmp);
+        return tmp;
     }
 }

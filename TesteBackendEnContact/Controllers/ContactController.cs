@@ -25,18 +25,10 @@ namespace TesteBackendEnContact.ControllersNonAuth
         {
             _logger = logger;
         }
-        [HttpGet("/seeHeader2")]
-        public ActionResult GetHeader()
-        {
-            Request.Headers.TryGetValue("auth", out var valueHeader);
-            if(string.IsNullOrEmpty(valueHeader))
-                return StatusCode(StatusCodes.Status403Forbidden, "asdasdad");
-            else
-                return Ok(valueHeader);
-        }
 
 
-        [HttpGet("/Contact/public/search")]
+
+        [HttpGet("/contact/public/search")]
         public async Task<IContactSearch> PublicSearch([FromServices] IContactRepository contactRepository, string ContactName="", string ContactPhone="", string ContactEmail="", string ContactAddress="", string CompanyName="", int AgendaId=0, string AgendaName="", int start_from=0)
         {
 
@@ -44,7 +36,7 @@ namespace TesteBackendEnContact.ControllersNonAuth
         }
 
 
-        [HttpGet("/Contact/public/get/{id}")]
+        [HttpGet("/contact/public/get/{id}")]
         public async Task<IContact> Get(int id, [FromServices] IContactRepository contactRepository)
         {
             return await contactRepository.GetAsync(id, PublicSearch:true);
@@ -69,13 +61,13 @@ namespace TesteBackendEnContact.ControllersAuth
         
         
         
-        [HttpPost("/Contact/update")]
+        [HttpPost("/contact/update")]
         public async Task<dynamic> Post(Contact contact, [FromServices] IContactRepository contactRepository)
         {
             return await contactRepository.SaveAsync(contact, this.USER_DATA_COMPANY.Id, this.API_KEY);
         }
 
-        [HttpPost("/Contact/add")]
+        [HttpPost("/contact/add")]
         public async Task<dynamic> Post(ContactAdd contact, [FromServices] IContactRepository contactRepository)
         {
             dynamic resposta = await contactRepository.SaveAsync(contact, this.USER_DATA_COMPANY.Id, this.API_KEY);
@@ -87,15 +79,15 @@ namespace TesteBackendEnContact.ControllersAuth
             }
         }
 
-        [HttpDelete]
-        public async Task Delete(int id, [FromServices] IContactRepository contactRepository)
+        [HttpDelete("/contact/delete")]
+        public async Task<dynamic> Delete(int id, [FromServices] IContactRepository contactRepository)
         {
-            await contactRepository.DeleteAsync(id);
+            return await contactRepository.DeleteAsync(id, this.API_KEY);
         }
 
 
 
-        [HttpGet("/Contact/list")]
+        [HttpGet("/contact/list")]
         public async Task<IEnumerable<IContact>> Get([FromServices] IContactRepository contactRepository)
         {
             Console.WriteLine(this.API_KEY);
@@ -104,21 +96,21 @@ namespace TesteBackendEnContact.ControllersAuth
         }
 
 
-        [HttpGet("/Contact/get/{id}")]
+        [HttpGet("/contact/get/{id}")]
         public async Task<IContact> Get(int id, [FromServices] IContactRepository contactRepository)
         {
             return await contactRepository.GetAsync(id, this.API_KEY);
         }
 
 
-        [HttpGet("/Contact/search")]
+        [HttpGet("/contact/search")]
         public async Task<IContactSearch> Search([FromServices] IContactRepository contactRepository, string ContactName="", string ContactPhone="", string ContactEmail="", string ContactAddress="", string CompanyName="", int AgendaId=0, string AgendaName="", int start_from=0)
         {
             return await contactRepository.SearchContact(API_KEY:this.API_KEY, ContactName:ContactName, ContactPhone:ContactPhone, ContactEmail:ContactEmail, ContactAddress:ContactAddress, ContactCompany:CompanyName, ContactBookId:AgendaId, ContactBookName:AgendaName, index_start:start_from);
         }
 
 
-        [HttpPost("/Contact/import")]
+        [HttpPost("/contact/import")]
         public async Task<dynamic> EnviaArquivo([FromForm] IFormFile arquivo, [FromServices] IContactRepository contactRepository)
         {
             List<dynamic> status = new List<dynamic>();
@@ -128,7 +120,7 @@ namespace TesteBackendEnContact.ControllersAuth
                 object teste = new {};
                 if(contato.ContactBookId == -1)
                 {
-                    teste = new {status = "Invalid format contact"};
+                    teste = new {line = contato.Name, status = "Invalid format contact"};
                 }
                 else
                 {
