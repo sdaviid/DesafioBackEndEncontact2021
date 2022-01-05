@@ -82,7 +82,9 @@ namespace TesteBackendEnContact.Repository
         {
             using var connection = new SqliteConnection(databaseConfig.ConnectionString);
             var sql = new StringBuilder();
-            string query = string.Format("SELECT A.Id, {0}, A.CompanyId, COUNT(C.Id) As TotalContacts FROM ContactBook A LEFT JOIN Company B ON A.CompanyID = B.Id LEFT JOIN Contact C ON A.Id = C.ContactBookId WHERE 1=1", 
+            string query = string.Format(@"SELECT A.Id, {0}, A.CompanyId, COUNT(C.Id) As TotalContacts
+                FROM ContactBook A LEFT JOIN Company B ON A.CompanyID = B.Id 
+                LEFT JOIN Contact C ON A.Id = C.ContactBookId WHERE 1=1", 
                 (string.IsNullOrEmpty(API_KEY) ? "SUBSTR(A.Name, 1, (LENGTH(A.Name) / 2)) || '*******' AS Name" : "A.Name")
             );
             sql.AppendLine(query);
@@ -96,7 +98,11 @@ namespace TesteBackendEnContact.Repository
 
             foreach (var AgendaSalva in result.ToList())
             {
-                IContactBookDetails Agenda = new ContactBookDetails(AgendaSalva.Id, AgendaSalva.Name.ToString(), AgendaSalva.CompanyId, AgendaSalva.TotalContacts);
+                IContactBookDetails Agenda = new ContactBookDetails(AgendaSalva.Id, 
+                                                            AgendaSalva.Name.ToString(), 
+                                                            AgendaSalva.CompanyId, 
+                                                            AgendaSalva.TotalContacts
+                );
                 returnList.Add(Agenda);
             }
 

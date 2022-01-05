@@ -8,10 +8,6 @@ using Microsoft.Extensions.Configuration;
 using System;
 using TesteBackendEnContact.Core.Domain.ContactBook.Company;
 
-// public class authUserData
-// {
-//     public int 
-// }
 
 
 public static class authHandler
@@ -40,11 +36,7 @@ public static class authHandler
         foreach (SqliteParameter p in cmd.Parameters) {
             tmp = tmp.Replace('@' + p.ParameterName.ToString(),"'" + p.Value.ToString() + "'");
         }
-        Console.WriteLine("ccmd auth");
-        Console.WriteLine(cmd.CommandText);
-        Console.WriteLine("ccmd auth111");
-        Console.WriteLine(tmp);
-        Console.WriteLine("ccmd auth");
+
 
         
         SqliteDataReader reader = cmd.ExecuteReader();
@@ -52,7 +44,6 @@ public static class authHandler
         if(HasRows)
         {
             int com_id_user = 0;
-            //int com_id_contactbook = 0;
             string com_name = "";
             string com_cnpj = "";
             string com_pass = "";
@@ -60,12 +51,10 @@ public static class authHandler
             while (reader.Read())
             {
                 com_id_user = reader.GetInt32(0);
-                //com_id_contactbook = reader.GetInt32(1);
                 com_name = reader.GetString(1);
                 com_cnpj = reader.GetString(2);
                 com_pass = reader.GetString(3);
                 com_api = reader.GetString(4);
-                //Company authUserData = new Company(reader.GetInt32(0), reader.GetInt32(1), reader.GetString(2), reader.GetString(3));
             }
             connection.Close();
             Company authUserData = new Company(com_id_user, com_name, com_cnpj, com_pass, com_api);
@@ -73,8 +62,6 @@ public static class authHandler
         }
         connection.Close();
         return false;
-        // Console.WriteLine(authHandler.Configuration.GetConnectionString("DefaultConnection"));
-        // return false;
     }
 }
 

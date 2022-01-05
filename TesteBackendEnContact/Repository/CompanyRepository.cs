@@ -38,13 +38,17 @@ namespace TesteBackendEnContact.Repository
                 dynamic company_data = await GetAsync(id_company, API_KEY, id_company);
                 if(company_data is ICompany)
                 {
-                    var daoUpdate = new CompanyDao(new Company(id_company, company.Name, company_data.CNPJ, company_data.Password, company_data.API));
+                    var daoUpdate = new CompanyDao(new Company(
+                                                        id_company, company.Name, 
+                                                        company_data.CNPJ, 
+                                                        company_data.Password, 
+                                                        company_data.API
+                                                    )
+                    );
                     await connection.UpdateAsync(daoUpdate);
                     return daoUpdate.Export();
                 }
                 return new {error = true, error_msg = "ID company doesnt belong to company"};
-                //var daoUpdate = new CompanyDaoUpdate(company);
-                //await connection.UpdateAsync(daoUpdate);
                 
             }
             else
@@ -61,9 +65,12 @@ namespace TesteBackendEnContact.Repository
                         return new {error = true, error_msg = "CNPJ already in use"};
                     }
                 }
-                string ApiKeyUnix = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds().ToString(); //PEGAR TIMEUNIX PRA GERAR MD5
-                dao.API = Utils.CreateMD5(ApiKeyUnix); //GERAR MD5 PRA KEY DA API
-                dao.Password = Utils.CreateMD5(dao.Password); //CONVERTER SENHA PRA MD5 (NAO UMA BOA PRATICA, MAS PRA SISTEMA SIMPLES...)
+                //PEGAR TIMEUNIX PRA GERAR MD5
+                string ApiKeyUnix = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds().ToString();
+                //GERAR MD5 PRA KEY DA API
+                dao.API = Utils.CreateMD5(ApiKeyUnix); 
+                //CONVERTER SENHA PRA MD5 (NAO UMA BOA PRATICA, MAS PRA SISTEMA SIMPLES...)
+                dao.Password = Utils.CreateMD5(dao.Password);
                 
                 dao.Id = await connection.InsertAsync(dao);
 
@@ -113,9 +120,7 @@ namespace TesteBackendEnContact.Repository
             //PREVENIR SQL INJECTION NO LOGIN...
             sql.AppendLine("SELECT * FROM Company WHERE CNPJ = @CNPJ AND Password = @Password;");
 
-            //string query = string.Format("SELECT * FROM Company WHERE CNPJ = '{0}' AND Password = '{1}';", CNPJ, Password);
-            //Console.WriteLine(query);
-            //var result = await connection.QuerySingleOrDefaultAsync<CompanyDao>(query, new { CNPJ, Password });
+
             var result = await connection.QuerySingleOrDefaultAsync<CompanyDao>(sql.ToString(), new { CNPJ, Password });
             return result?.Export();
         }
@@ -143,8 +148,7 @@ namespace TesteBackendEnContact.Repository
                 result = await connection.QuerySingleOrDefaultAsync<CompanyDao>(sql.ToString());
             else
                 result = await connection.QuerySingleOrDefaultAsync<CompanyDaoList>(sql.ToString());
-            //var query = string.Format("SELECT Id, Name, CNPJ FROM Company where Id = {0} AND API = '{1}';", id.ToString(), API_KEY);
-            //var result = await connection.QuerySingleOrDefaultAsync<CompanyDao>(query);
+
 
             return result?.Export();
         }

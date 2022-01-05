@@ -98,7 +98,9 @@ namespace TesteBackendEnContact.Repository
             
             using var connection = new SqliteConnection(databaseConfig.ConnectionString);
 
-            SqliteCommand cmd = new SqliteCommand("SELECT A.Id, A.ContactBookId, A.CompanyId, A.Name, A.Phone, A.Email, A.Address FROM Contact A LEFT JOIN Company B ON A.CompanyId = B.ID WHERE B.API = @api", connection);
+            SqliteCommand cmd = new SqliteCommand(@"SELECT A.Id, A.ContactBookId, A.CompanyId, A.Name, 
+                A.Phone, A.Email, A.Address FROM Contact A 
+                LEFT JOIN Company B ON A.CompanyId = B.ID WHERE B.API = @api", connection);
             cmd.Parameters.Add(new SqliteParameter("api", API_KEY));
             string contactbooksearch = "";
             if(id_contactbook != 0)
@@ -108,10 +110,6 @@ namespace TesteBackendEnContact.Repository
             string query = Utils.buildQuerySqliteCmd(cmd);
             if(contactbooksearch.Count() > 0)
                 query += contactbooksearch;
-            
-            
-
-
 
 
             var result = await connection.QueryAsync<ContactDao>(query);
@@ -123,7 +121,8 @@ namespace TesteBackendEnContact.Repository
         {
             using var connection = new SqliteConnection(databaseConfig.ConnectionString);
             var sql = new StringBuilder();
-            string query = string.Format("SELECT A.Id, A.ContactBookId, A.CompanyId, {0}, {1}, {2}, {3} FROM Contact A LEFT JOIN Company B ON A.CompanyId = B.ID WHERE A.Id = {4}", 
+            string query = string.Format(@"SELECT A.Id, A.ContactBookId, A.CompanyId, {0}, {1},
+                {2}, {3} FROM Contact A LEFT JOIN Company B ON A.CompanyId = B.ID WHERE A.Id = {4}", 
                 (PublicSearch == false ? "A.Name" : "SUBSTR(A.Name, 1, (LENGTH(A.Name) / 2)) || '*******' AS Name"),
                 (PublicSearch == false ? "A.Phone" : "SUBSTR(A.Phone, 1, (LENGTH(A.Phone) / 2)) || '*******' AS Phone"),
                 (PublicSearch == false ? "A.Email" : "SUBSTR(A.Email, 1, (LENGTH(A.Email) / 2)) || '*******' AS Email"),
@@ -134,7 +133,7 @@ namespace TesteBackendEnContact.Repository
             if((PublicSearch == false) && (!string.IsNullOrEmpty(API_KEY)))
                 sql.AppendLine(string.Format("AND B.API = '{0}'", API_KEY));
             Console.WriteLine(sql.ToString());
-            //var query = "SELECT * FROM Contact where Id = @id AND ";
+
             var result = await connection.QuerySingleOrDefaultAsync<ContactDao>(sql.ToString());
 
             return result?.Export();
@@ -144,7 +143,9 @@ namespace TesteBackendEnContact.Repository
         {
             using var connection = new SqliteConnection(databaseConfig.ConnectionString);
             var sql = new StringBuilder();
-            string query = string.Format("SELECT A.Id, A.ContactBookId, A.CompanyId, {0}, {1}, {2}, {3} FROM COMPANY B LEFT JOIN CONTACT A ON B.ID = A.COMPANYID LEFT JOIN ContactBook C ON A.ContactBookId = C.ID WHERE 1=1", 
+            string query = string.Format(@"SELECT A.Id, A.ContactBookId, A.CompanyId, {0}, {1}, {2}, 
+                {3} FROM COMPANY B LEFT JOIN CONTACT A ON B.ID = A.COMPANYID 
+                LEFT JOIN ContactBook C ON A.ContactBookId = C.ID WHERE 1=1", 
                 (PublicSearch == false ? "A.Name" : "SUBSTR(A.Name, 1, (LENGTH(A.Name) / 2)) || '*******' AS Name"),
                 (PublicSearch == false ? "A.Phone" : "SUBSTR(A.Phone, 1, (LENGTH(A.Phone) / 2)) || '*******' AS Phone"),
                 (PublicSearch == false ? "A.Email" : "SUBSTR(A.Email, 1, (LENGTH(A.Email) / 2)) || '*******' AS Email"),
@@ -223,8 +224,6 @@ namespace TesteBackendEnContact.Repository
             }
             return new ContactSearch(returnList.ToList(), result.ToList().Count());
             /*fim novo*/
-            // retorno = result?.Select(item => item.Export());
-            // return new ContactSearch(retorno, result.ToList().Count());
         }
     }
 
@@ -259,7 +258,6 @@ namespace TesteBackendEnContact.Repository
 
 
         public IContact Export() => new Contact(Id, ContactBookId, CompanyId, Name, Phone, Email, Address);
-        // public IContactSearch ExportSearch() => new ContactSearch(Lista, Total);
     }
 
 

@@ -29,10 +29,23 @@ namespace TesteBackendEnContact.ControllersNonAuth
 
 
         [HttpGet("/contact/public/search")]
-        public async Task<IContactSearch> PublicSearch([FromServices] IContactRepository contactRepository, string ContactName="", string ContactPhone="", string ContactEmail="", string ContactAddress="", string CompanyName="", int AgendaId=0, string AgendaName="", int start_from=0)
+        public async Task<IContactSearch> PublicSearch([FromServices] IContactRepository contactRepository, 
+                                                string ContactName="", string ContactPhone="", string ContactEmail="", 
+                                                string ContactAddress="", string CompanyName="", int AgendaId=0, 
+                                                string AgendaName="", int start_from=0
+        )
         {
 
-            return await contactRepository.SearchContact(ContactName:ContactName, ContactPhone:ContactPhone, ContactEmail:ContactEmail, ContactAddress:ContactAddress, ContactCompany:CompanyName, ContactBookId:AgendaId, ContactBookName:AgendaName, PublicSearch:true, index_start:start_from);
+            return await contactRepository.SearchContact(ContactName:ContactName, 
+                                                ContactPhone:ContactPhone, 
+                                                ContactEmail:ContactEmail, 
+                                                ContactAddress:ContactAddress, 
+                                                ContactCompany:CompanyName, 
+                                                ContactBookId:AgendaId, 
+                                                ContactBookName:AgendaName, 
+                                                PublicSearch:true, 
+                                                index_start:start_from
+            );
         }
 
 
@@ -115,9 +128,22 @@ namespace TesteBackendEnContact.ControllersAuth
 
 
         [HttpGet("/contact/search")]
-        public async Task<IContactSearch> Search([FromServices] IContactRepository contactRepository, string ContactName="", string ContactPhone="", string ContactEmail="", string ContactAddress="", string CompanyName="", int AgendaId=0, string AgendaName="", int start_from=0)
+        public async Task<IContactSearch> Search([FromServices] IContactRepository contactRepository, 
+                                        string ContactName="", string ContactPhone="", string ContactEmail="", 
+                                        string ContactAddress="", string CompanyName="", int AgendaId=0, 
+                                        string AgendaName="", int start_from=0
+        )
         {
-            return await contactRepository.SearchContact(API_KEY:this.API_KEY, ContactName:ContactName, ContactPhone:ContactPhone, ContactEmail:ContactEmail, ContactAddress:ContactAddress, ContactCompany:CompanyName, ContactBookId:AgendaId, ContactBookName:AgendaName, index_start:start_from);
+            return await contactRepository.SearchContact(API_KEY:this.API_KEY, 
+                                            ContactName:ContactName, 
+                                            ContactPhone:ContactPhone, 
+                                            ContactEmail:ContactEmail, 
+                                            ContactAddress:ContactAddress, 
+                                            ContactCompany:CompanyName, 
+                                            ContactBookId:AgendaId, 
+                                            ContactBookName:AgendaName, 
+                                            index_start:start_from
+            );
         }
 
 
@@ -139,7 +165,10 @@ namespace TesteBackendEnContact.ControllersAuth
                     
                     if(resposta is IContact)
                     {
-                        teste = new {contactBookId = contato.ContactBookId, companyId = this.USER_DATA_COMPANY.Id, name = contato.Name, ContactId = resposta.Id, Address = contato.Address, Phone = contato.Phone, Email = contato.Email, status = "OK"};
+                        teste = new {contactBookId = contato.ContactBookId, companyId = this.USER_DATA_COMPANY.Id, 
+                                name = contato.Name, ContactId = resposta.Id, Address = contato.Address, 
+                                Phone = contato.Phone, Email = contato.Email, status = "OK"
+                        };
                     }
                     else
                     {
@@ -150,7 +179,6 @@ namespace TesteBackendEnContact.ControllersAuth
             }
             c.show_contacts();
             return status;
-            //return await Task.FromResult("aushuhas".ToString());
         }
 
     }

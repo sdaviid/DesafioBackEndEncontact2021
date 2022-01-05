@@ -74,11 +74,6 @@ namespace TesteBackendEnContact.ControllersAuth
             return StatusCode(StatusCodes.Status401Unauthorized, new {error = true, error_msg = "Invalid API_KEY"});
         }
 
-        // [HttpGet("/company/list")]
-        // public async Task<IEnumerable<ICompanyList>> Get([FromServices] ICompanyRepository companyRepository)
-        // {
-        //     return await companyRepository.GetAllAsync(this.API_KEY);
-        // }
 
         [HttpGet("/company/get/{id}")]
         public async Task<dynamic> Get(int id, [FromServices] ICompanyRepository companyRepository)
