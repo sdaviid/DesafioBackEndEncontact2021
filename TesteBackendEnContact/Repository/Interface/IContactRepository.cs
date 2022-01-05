@@ -9,7 +9,7 @@ namespace TesteBackendEnContact.Repository.Interface
     {
         Task<dynamic> SaveAsync(dynamic contact, int IdCompany, string API_KEY);
         Task<dynamic> DeleteAsync(int id, string API_KEY);
-        Task<IEnumerable<IContact>> GetAllAsync(string API_KEY);
+        Task<IEnumerable<IContact>> GetAllAsync(string API_KEY, int id_contactbook=0);
         Task<IContact> GetAsync(int id, dynamic API_KEY=null, bool PublicSearch=false);
         Task<ContactSearch> SearchContact(dynamic API_KEY=null, dynamic ContactName=null, dynamic ContactPhone=null, dynamic ContactEmail=null, dynamic ContactAddress=null, dynamic ContactCompany=null, int ContactBookId=0, dynamic ContactBookName=null, bool PublicSearch=false, int index_start=0);
     }

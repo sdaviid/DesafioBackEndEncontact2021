@@ -62,7 +62,7 @@ namespace TesteBackendEnContact.ControllersAuth
         
         
         [HttpPost("/contact/update")]
-        public async Task<dynamic> Post(Contact contact, [FromServices] IContactRepository contactRepository)
+        public async Task<dynamic> Post(ContactUpdate contact, [FromServices] IContactRepository contactRepository)
         {
             return await contactRepository.SaveAsync(contact, this.USER_DATA_COMPANY.Id, this.API_KEY);
         }
@@ -88,11 +88,22 @@ namespace TesteBackendEnContact.ControllersAuth
 
 
         [HttpGet("/contact/list")]
-        public async Task<IEnumerable<IContact>> Get([FromServices] IContactRepository contactRepository)
+        public async Task<IEnumerable<IContact>> Get([FromServices] IContactRepository contactRepository, int IdContactBook=0)
         {
             Console.WriteLine(this.API_KEY);
             Console.WriteLine(this.USER_DATA_COMPANY.Name);
-            return await contactRepository.GetAllAsync(this.API_KEY);
+            return await contactRepository.GetAllAsync(this.API_KEY, IdContactBook);
+        }
+
+
+        [HttpGet("/contact/export")]
+        public async Task<dynamic> Export([FromServices] IContactRepository contactRepository, int IdContactBook=0)
+        {
+            IEnumerable<IContact> resposta = await contactRepository.GetAllAsync(this.API_KEY, IdContactBook);
+            ContactCsvHandler c = new ContactCsvHandler(resposta);
+            string data_csv = c.convert_contact_to_csv();
+            return Content(data_csv, "text/csv");
+
         }
 
 

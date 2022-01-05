@@ -29,7 +29,7 @@ namespace TesteBackendEnContact.Repository
         {
             using var connection = new SqliteConnection(databaseConfig.ConnectionString);
             int Id_contact = 0;
-            if(contact is Contact)
+            if(contact is ContactUpdate)
             {
                 Id_contact = contact.Id;
             }
@@ -93,22 +93,23 @@ namespace TesteBackendEnContact.Repository
         }
 
 
-        public async Task<IEnumerable<IContact>> GetAllAsync(string API_KEY)
+        public async Task<IEnumerable<IContact>> GetAllAsync(string API_KEY, int id_contactbook=0)
         {
+            
             using var connection = new SqliteConnection(databaseConfig.ConnectionString);
 
             SqliteCommand cmd = new SqliteCommand("SELECT A.Id, A.ContactBookId, A.CompanyId, A.Name, A.Phone, A.Email, A.Address FROM Contact A LEFT JOIN Company B ON A.CompanyId = B.ID WHERE B.API = @api", connection);
             cmd.Parameters.Add(new SqliteParameter("api", API_KEY));
-            
+            string contactbooksearch = "";
+            if(id_contactbook != 0)
+            {
+                contactbooksearch = string.Format(" AND A.ContactBookId = {0}", id_contactbook);
+            }
             string query = Utils.buildQuerySqliteCmd(cmd);
-            //string query = string.Format("SELECT A.Id, A.ContactBookId, A.CompanyId, A.Name, A.Phone, A.Email, A.Address FROM Contact A LEFT JOIN Company B ON A.CompanyId = B.ID WHERE B.API = '{0}';", API_KEY);
-
-            //var sql = new StringBuilder();
-            //sql.AppendLine("SELECT A.Id, A.ContactBookId, A.CompanyId, A.Name, A.Phone, A.Email, A.Address FROM Contact A LEFT JOIN Company B ON A.CompanyId = B.ID WHERE B.API = @API_KEY;");
-            //SqliteCommand cmd = new SqliteCommand(@"SELECT A.Id, A.ContactBookId, A.CompanyId, A.Name, A.Phone, A.Email, A.Address FROM Contact A LEFT JOIN Company B ON A.CompanyId = B.ID WHERE B.API = @api", connection);
-            //cmd.Parameters.Add(new SqliteParameter("api", API_KEY));
-            //var result = await connection.QueryAsync<ContactDao>(sql.ToString(), new { API_KEY });
-            //var result = await connection.QueryAsync<ContactDao>(cmd.CommandText);
+            if(contactbooksearch.Count() > 0)
+                query += contactbooksearch;
+            
+            
 
 
 

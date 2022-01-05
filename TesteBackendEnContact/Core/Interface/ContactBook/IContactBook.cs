@@ -14,4 +14,15 @@
         int CompanyId {get;}
         int TotalContacts {get;}
     }
+
+    public interface IContactBookAdd
+    {
+        string Name { get; }
+    }
+
+    public interface IContactBookUpdate
+    {
+        int Id { get; }
+        string Name { get; }
+    }
 }

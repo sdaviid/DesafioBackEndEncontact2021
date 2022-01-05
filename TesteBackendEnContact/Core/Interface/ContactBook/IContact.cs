@@ -21,7 +21,7 @@ namespace TesteBackendEnContact.Core.Interface.ContactBook.Contact
         string Address { get; }
     }
 
-//IEnumerable<IContactSearch>
+
 
     public interface IContactSearch
     {
@@ -30,15 +30,13 @@ namespace TesteBackendEnContact.Core.Interface.ContactBook.Contact
     }
 
 
-    // public interface IContactSearch
-    // {
-    //     int Id { get; }
-    //     int ContactBookId { get; }
-    //     int CompanyId { get; }
-    //     string Name { get; }
-    //     string Phone { get; }
-    //     string Email { get; }
-    //     string Address { get; }
-    //     int Total{get;}
-    // }
+    public interface IContactUpdate
+    {
+        int Id { get; }
+        int ContactBookId { get; }
+        string Name { get; }
+        string Phone { get; }
+        string Email { get; }
+        string Address { get; }
+    }
 }

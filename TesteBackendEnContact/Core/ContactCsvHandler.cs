@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System;
 using System.IO;
 using TesteBackendEnContact.Core.Domain.Contact;
+using TesteBackendEnContact.Core.Interface.ContactBook.Contact;
 
 
 public class ContactModel
@@ -23,6 +24,8 @@ public class ContactModel
         Address = address;
     }
 }
+
+
 public class ContactCsvHandler
 {
     public dynamic path_file { get; set; }
@@ -42,12 +45,31 @@ public class ContactCsvHandler
         this.convert_csv_to_contact(true);
     }
 
+    public ContactCsvHandler(IEnumerable<IContact> path, bool auto_convert=false)
+    {
+        this.path_file = path;
+        if(auto_convert == true)
+            this.convert_contact_to_csv();
+    }
+
     public void show_contacts()
     {
         foreach(var contato in this.list_contact)
         {
             Console.WriteLine(contato.Address);
         }
+    }
+
+    public string convert_contact_to_csv()
+    {
+        string retorno = "ContactBookId,Name,Phone,Email,Address";
+        foreach(Contact contato in this.path_file)
+        {
+            string temp = string.Format("\n{0},{1},{2},{3},{4}", Convert.ToInt32(contato.ContactBookId), contato.Name, contato.Phone, contato.Email, contato.Address);
+            Console.WriteLine(temp);
+            retorno += temp;
+        }
+        return retorno;
     }
 
     void convert_csv_to_contact(bool stream=false)

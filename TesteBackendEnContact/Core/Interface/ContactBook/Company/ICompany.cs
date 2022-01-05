@@ -24,4 +24,10 @@
         string CNPJ {get;}
         string Password {get;}
     }
+
+
+    public interface ICompanyUpdate
+    {
+        string Name { get; }
+    }
 }

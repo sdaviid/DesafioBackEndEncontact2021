@@ -23,24 +23,33 @@ namespace TesteBackendEnContact.Repository
         }
 
 
-        public async Task<IContactBook> SaveAsync(IContactBook contactBook, int IdCompany)
+        public async Task<dynamic> SaveAsync(dynamic contactBook, int IdCompany, string API_KEY)
         {
             using var connection = new SqliteConnection(databaseConfig.ConnectionString);
-            var dao = new ContactBookDao(contactBook);
+            int id_contactbook = 0;
+            if(contactBook is ContactBookUpdate)
+            {
+                id_contactbook = contactBook.Id;
+            }
+            ContactBook contactbook_data = new ContactBook(id_contactbook, contactBook.Name, IdCompany);
+            var dao = new ContactBookDao(contactbook_data);
 
             if (dao.Id == 0)
             {
-                dao.CompanyId = IdCompany;
                 dao.Id = await connection.InsertAsync(dao);
             }
             else
-                await connection.UpdateAsync(dao);
+            {
+                //CHECA SE ID PERTENCE A COMPANY
+                dynamic ContactBookDetalhes = await GetAsync(dao.Id, API_KEY);
+                if(ContactBookDetalhes is IContactBookDetails)
+                    await connection.UpdateAsync(dao);
+                else
+                    return new {error = true, error_msg = "ID contactBook doesnt belong to company"};
+            }
 
             return dao.Export();
 
-            // dao.Id = await connection.InsertAsync(dao);
-
-            // return dao.Export();
         }
 
 
@@ -146,5 +155,43 @@ namespace TesteBackendEnContact.Repository
         }
 
         public IContactBookDetails Export() => new ContactBookDetails(Id, Name, CompanyId, TotalContacts);
+    }
+
+
+    [Table("ContactBook")]
+    public class ContactBookDaoAdd : IContactBookAdd
+    {
+        public string Name { get; set; }
+
+        public ContactBookDaoAdd()
+        {
+        }
+
+        public ContactBookDaoAdd(IContactBookAdd contactBookAdd)
+        {
+            Name = contactBookAdd.Name;
+        }
+
+        public IContactBookAdd Export() => new ContactBookAdd(Name);
+    }
+
+
+    [Table("ContactBook")]
+    public class ContactBookDaoUpdate : IContactBookUpdate
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+
+        public ContactBookDaoUpdate()
+        {
+        }
+
+        public ContactBookDaoUpdate(IContactBookUpdate contactBookup)
+        {
+            Id = contactBookup.Id;
+            Name = contactBookup.Name;
+        }
+
+        public IContactBookUpdate Export() => new ContactBookUpdate(Id, Name);
     }
 }

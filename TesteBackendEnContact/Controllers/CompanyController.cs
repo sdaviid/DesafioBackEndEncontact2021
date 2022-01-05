@@ -88,5 +88,23 @@ namespace TesteBackendEnContact.ControllersAuth
                 id_company = this.USER_DATA_COMPANY.Id;
             return await companyRepository.GetAsync(id, this.API_KEY, id_company);
         }
+
+
+        [HttpPost("/company/update")]
+        public async Task<dynamic> Post(CompanyUpdate company, [FromServices] ICompanyRepository companyRepository)
+        {
+            if(this.HAS_USER == true)
+            {
+                dynamic resposta = await companyRepository.SaveAsync(company, this.USER_DATA_COMPANY.Id, this.API_KEY);
+                if(resposta is ICompany)
+                    return resposta;
+                else
+                    return StatusCode(StatusCodes.Status400BadRequest, resposta);
+            }
+            else
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, new {error = true, error_msg = "Missing API Key"});
+            }
+        }
     }
 }

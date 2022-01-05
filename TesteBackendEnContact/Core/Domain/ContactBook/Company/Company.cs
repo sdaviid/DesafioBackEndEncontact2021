@@ -52,4 +52,15 @@ namespace TesteBackendEnContact.Core.Domain.ContactBook.Company
             Password = password;
         }
     }
+
+    public class CompanyUpdate : ICompanyUpdate
+    {
+        public string Name { get; set; }
+
+
+        public CompanyUpdate(string name)
+        {
+            Name = name;
+        }
+    }
 }

@@ -32,4 +32,26 @@ namespace TesteBackendEnContact.Core.Domain.ContactBook
         }
     }
 
+    public class ContactBookAdd : IContactBookAdd
+    {
+        public string Name { get;  set; }
+
+        public ContactBookAdd(string name)
+        {
+            Name = name;
+        }
+    }
+
+    public class ContactBookUpdate : IContactBookUpdate
+    {
+        public int Id {get;set;}
+        public string Name { get;  set; }
+
+        public ContactBookUpdate(int id, string name)
+        {
+            Id = id;
+            Name = name;
+        }
+    }
+
 }

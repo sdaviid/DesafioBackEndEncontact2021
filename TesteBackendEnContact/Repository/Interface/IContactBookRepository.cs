@@ -6,7 +6,7 @@ namespace TesteBackendEnContact.Repository.Interface
 {
     public interface IContactBookRepository
     {
-        Task<IContactBook> SaveAsync(IContactBook contactBook, int IdCompany);
+        Task<dynamic> SaveAsync(dynamic contactBook, int IdCompany, string API_KEY);
         Task<dynamic> DeleteAsync(int id, string API_KEY);
         Task<IEnumerable<IContactBookDetails>> GetAllAsync(string API_KEY);
         Task<IContactBookDetails> GetAsync(int id, string API_KEY);

@@ -26,13 +26,32 @@ namespace TesteBackendEnContact.Repository
             this.databaseConfig = databaseConfig;
         }
 
-        public async Task<dynamic> SaveAsync(dynamic company)
+        public async Task<dynamic> SaveAsync(dynamic company, int IdCompany=0, string API_KEY="")
         {
             using var connection = new SqliteConnection(databaseConfig.ConnectionString);
-            var dao = new CompanyDao(new Company(0, company.Name, company.CNPJ, company.Password, ""));
-
-            if (dao.Id == 0)
+            int id_company = 0;
+            if(company is CompanyUpdate)
             {
+                id_company = IdCompany;
+                if(string.IsNullOrEmpty(API_KEY))
+                    return new {error = true, error_msg = "Need API Key from company for update"};
+                dynamic company_data = await GetAsync(id_company, API_KEY, id_company);
+                if(company_data is ICompany)
+                {
+                    var daoUpdate = new CompanyDao(new Company(id_company, company.Name, company_data.CNPJ, company_data.Password, company_data.API));
+                    await connection.UpdateAsync(daoUpdate);
+                    return daoUpdate.Export();
+                }
+                return new {error = true, error_msg = "ID company doesnt belong to company"};
+                //var daoUpdate = new CompanyDaoUpdate(company);
+                //await connection.UpdateAsync(daoUpdate);
+                
+            }
+            else
+            {
+                var dao = new CompanyDao(new Company(0, company.Name, company.CNPJ, company.Password, ""));
+
+
                 var empresas = await GetAllAsync();
                 foreach(var i in empresas.ToList())
                 {
@@ -47,11 +66,9 @@ namespace TesteBackendEnContact.Repository
                 dao.Password = Utils.CreateMD5(dao.Password); //CONVERTER SENHA PRA MD5 (NAO UMA BOA PRATICA, MAS PRA SISTEMA SIMPLES...)
                 
                 dao.Id = await connection.InsertAsync(dao);
-            }
-            else
-                await connection.UpdateAsync(dao);
 
-            return dao.Export();
+                return dao.Export();
+            }
         }
 
         public async Task<dynamic> DeleteAsync(int id, string API_KEY, int id_company)
@@ -202,5 +219,22 @@ namespace TesteBackendEnContact.Repository
         }
 
         public ICompanyAdd Export() => new CompanyAdd(Name, CNPJ, Password);
+    }
+
+    [Table("Company")]
+    public class CompanyDaoUpdate : ICompanyUpdate
+    {
+        public string Name { get; set; }
+
+        public CompanyDaoUpdate()
+        {
+        }
+
+        public CompanyDaoUpdate(ICompanyUpdate company)
+        {
+            Name = company.Name;
+        }
+
+        public ICompanyUpdate Export() => new CompanyUpdate(Name);
     }
 }

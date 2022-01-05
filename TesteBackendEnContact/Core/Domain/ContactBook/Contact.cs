@@ -57,16 +57,28 @@ namespace TesteBackendEnContact.Core.Domain.Contact
             Total = total;
         }
 
-        // public ContactSearch(int id, int contactbookid, int companyid, string name, string phone, string email, string address, int total)
-        // {
-        //     Id = id;
-        //     ContactBookId = contactbookid;
-        //     CompanyId = companyid;
-        //     Name = name;
-        //     Phone = phone;
-        //     Email = email;
-        //     Address = address;
-        //     Total = total;
-        // }
+    }
+
+
+    public class ContactUpdate : IContactUpdate
+    {
+        public int Id { get; set; }
+        public int ContactBookId { get; set; }
+        public string Name { get;  set; }
+        public string Phone { get;  set; }
+        public string Email { get;  set; }
+        public string Address { get;  set; }
+
+
+
+        public ContactUpdate(int id, int contactbookid, string name, string phone, string email, string address)
+        {
+            Id = id;
+            ContactBookId = contactbookid;
+            Name = name;
+            Phone = phone;
+            Email = email;
+            Address = address;
+        }
     }
 }
