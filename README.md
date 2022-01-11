@@ -48,7 +48,7 @@ Tem um tempinho a mais? Acha que pode fazer mais? Então aqui vai alguns desafio
 
 ## Observação
 
-Senti liberdade para fazer alterações no projeto base e usando a parte de autenticação como base algumas coisas ações deixaram de existir.
+Senti liberdade para fazer alterações no projeto base e usando a parte de autenticação como base algumas ações deixaram de existir.
 
 Atualizei o projeto para que apenas companhias previamente cadastradas possam inserir/alterar informações do sistema, ao se cadastrar pela primeira vez uma chave de API única para aquela companhia é entregue ao cliente, este deve utiliza-lá em todas as outras requicições seja enviando na query da uri (?API_KEY=xxxxx) ou por um header na request (API_KEY: xxxxx).
 
@@ -66,7 +66,7 @@ O delete de uma companhia causará a deleção de todas suas agendas e respectiv
 A exportação em CSV só exportará os contatos da companhia da API_KEY podendo ser todos os contatos ou apenas o contatos de uma agenda.
 
 
-Listagem de todas as agendas (idenpendente da companhia) é possível, porém os dados serão omitidos quando não estiver autenticado, exemplo
+Listagem de todas as agendas (independente da companhia) é possível, porém os dados serão omitidos quando não estiver autenticado, exemplo
 
 ```json
 {
@@ -124,6 +124,44 @@ Para a visualização dos próximos 10 a variável start_from deverá ser enviad
 
 Podendo ser um valor no meio também, exemplo 5 que mostrará a partir da quinta linha ate a 15 
 
+
+A importação deverá seguir o layout:
+
+ContactBookId,Name,Phone,Email,Address
+
+
+No caso de falha ao ''parsear'' uma das linhas o sistema irá pular para a próxima e a resposta final consiste em um json com o status para cada linha
+
+```json
+[
+  {
+    "contactBookId": 9,
+    "companyId": 2,
+    "name": "hehe",
+    "contactId": 93,
+    "address": "rua joao eudorio",
+    "phone": "(15) 99119-6799",
+    "email": "hehe@terra.com.br",
+    "status": "OK"
+  },
+  {
+    "line": "9,kaka,(15) 99339-94",
+    "status": "Invalid format contact"
+  },
+  {
+    "contactBookId": 9,
+    "companyId": 2,
+    "name": "annrnre",
+    "contactId": 94,
+    "address": "rua eujaja",
+    "phone": "(15) 1299-3999",
+    "email": "annrnre@uol.com.br",
+    "status": "OK"
+  }
+]
+```
+
+A importação poderá enviar o novo contato para agendas diferentes, desde que informadas e que essas sejam pertencentes a companhia da API_KEY.
 
 
 
