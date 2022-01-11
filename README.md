@@ -45,3 +45,87 @@ Tem um tempinho a mais? Acha que pode fazer mais? Então aqui vai alguns desafio
 - Seria uma boa se pontos críticos do código tivessem testes unitários.
 - [X] Adicionar autenticação na API seria interessante.
 - [X] Poder exportar a agenda completa também seria legal.
+
+## Observação
+
+Senti liberdade para fazer alterações no projeto base e usando a parte de autenticação como base algumas coisas ações deixaram de existir.
+
+Atualizei o projeto para que apenas companhias previamente cadastradas possam inserir/alterar informações do sistema, ao se cadastrar pela primeira vez uma chave de API única para aquela companhia é entregue ao cliente, este deve utiliza-lá em todas as outras requicições seja enviando na query da uri (?API_KEY=xxxxx) ou por um header na request (API_KEY: xxxxx).
+
+O sistema por sua vez irá confirmar se a chave API informada existe e se por exemplo a request solicitada seja para visualizar um ID de um contato/agenda, se o ID pertence a companhia da API_KEY.
+
+Deleção e alteração só serão possíveis se o ID a ser modificado pertencer a companhia da API_KEY.
+
+A inserção de novos contatos é obrigatório o envio de um ID de agenda, sendo essa agenda também confirmada se pertence a companhia da API_KEY.
+
+Percebi uma limitação do código (que não sei se era pra ser a idéia ou se poderia ser modificado) que na forma feita o projeto só permitia uma agenda por companhia, pois o IdContactBookId estava atrelado diretamente na tabela Companhia, realizei a alteração para atrelar na tabela ContactBook o Id da companhia que pertence, dando a possibilidade das companhia terem infinitas agendas.
+
+
+O delete de uma companhia causará a deleção de todas suas agendas e respectivamente todos os seus contatos.
+
+A exportação em CSV só exportará os contatos da companhia da API_KEY podendo ser todos os contatos ou apenas o contatos de uma agenda.
+
+
+Listagem de todas as agendas (idenpendente da companhia) é possível, porém os dados serão omitidos quando não estiver autenticado, exemplo
+
+```json
+{
+  "id": 1,
+  "name": "con******",
+  "total_contacts": 15
+}
+```
+
+
+A pesquisa de contatos possui dois end-points, uma pública e uma privada
+
+```bash
+/contact/search
+/contact/public/search
+```
+
+A pesquisa pública poderá ser realizada por qualquer pessoa mesmo sem API_KEY e irá pesquisar contatos de todas as empresas/agendas, porém a exibição dos dados será limitada
+
+```json
+{
+  "lista": [
+    {
+      "id": 85,
+      "contactBookId": 6,
+      "companyId": 2,
+      "name": "ann*******",
+      "phone": "(15) 12*******",
+      "email": "annrnre@u*******",
+      "address": "rua e*******"
+    }
+  ]
+  "total": 1
+}
+```
+
+A privada por sua vez pesquisará apenas contatos e agendas pertecentes a API_KEY informada, sendo a visão completa.
+
+Os termos de pesquisa podem ser tanto usados em conjunto como também sozinhos, são eles:
+
+```bash
+ContactName - nome do contato ou parte dele
+ContactPhone - telefone do contato ou parte dele
+ContactEmail - e-mail do contato ou parte dele
+ContactAddress - endereco do contato ou parte dele
+CompanyName - nome da empresa que o contato pertence ou parte dele
+AgendaId - ID da agenda atrelada ao contato
+AgendaName - nome da agenda atrelada ao contato ou parte dele
+```
+
+
+A páginação foi feita de forma similar a como funciona o Linkedin (que usei de inspiração por nenhuma razão), a listagem máxima exibida serão de 10 contatos e a listagem do número total encontrado.
+
+Para a visualização dos próximos 10 a variável start_from deverá ser enviada com o valor 10, 20, 30 ...
+
+Podendo ser um valor no meio também, exemplo 5 que mostrará a partir da quinta linha ate a 15 
+
+
+
+
+
+
