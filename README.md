@@ -50,7 +50,7 @@ Tem um tempinho a mais? Acha que pode fazer mais? Então aqui vai alguns desafio
 
 Senti liberdade para fazer alterações no projeto base e usando a parte de autenticação como base algumas ações deixaram de existir.
 
-Atualizei o projeto para que apenas companhias previamente cadastradas possam inserir/alterar informações do sistema, ao se cadastrar pela primeira vez uma chave de API única para aquela companhia é entregue ao cliente, este deve utiliza-lá em todas as outras requicições seja enviando na query da uri (?API_KEY=xxxxx) ou por um header na request (API_KEY: xxxxx).
+Atualizei o projeto para apenas companhias previamente cadastradas possam inserir/alterar informações do sistema, ao se cadastrar pela primeira vez uma chave de API única para aquela companhia é entregue ao cliente, este deve utiliza-lá em todas as outras requicições seja enviando na query da uri (?API_KEY=xxxxx) ou por um header na request (API_KEY: xxxxx).
 
 O sistema por sua vez irá confirmar se a chave API informada existe e se por exemplo a request solicitada seja para visualizar um ID de um contato/agenda, se o ID pertence a companhia da API_KEY.
 
@@ -58,15 +58,15 @@ Deleção e alteração só serão possíveis se o ID a ser modificado pertencer
 
 A inserção de novos contatos é obrigatório o envio de um ID de agenda, sendo essa agenda também confirmada se pertence a companhia da API_KEY.
 
-Percebi uma limitação do código (que não sei se era pra ser a idéia ou se poderia ser modificado) que na forma feita o projeto só permitia uma agenda por companhia, pois o IdContactBookId estava atrelado diretamente na tabela Companhia, realizei a alteração para atrelar na tabela ContactBook o Id da companhia que pertence, dando a possibilidade das companhia terem infinitas agendas.
+Percebi uma limitação do código (que não sei se era pra ser a idéia ou se poderia ser modificado) na forma feita o projeto só permitia uma agenda por companhia, pois o IdContactBookId estava atrelado diretamente na tabela Companhia, realizei a alteração para atrelar na tabela ContactBook o Id da companhia que pertence, dando a possibilidade das companhias terem infinitas agendas.
 
 
 O delete de uma companhia causará a deleção de todas suas agendas e respectivamente todos os seus contatos.
 
-A exportação em CSV só exportará os contatos da companhia da API_KEY podendo ser todos os contatos ou apenas o contatos de uma agenda.
+A exportação em CSV só exportará os contatos da companhia da API_KEY podendo ser todos os contatos ou apenas os contatos de uma agenda.
 
 
-Listagem de todas as agendas (independente da companhia) é possível, porém os dados serão omitidos quando não estiver autenticado, exemplo
+É possível obter a listagem de todas as agendas (independente da companhia), porém os dados serão omitidos quando não estiver autenticado, exemplo
 
 ```json
 {
@@ -98,7 +98,7 @@ A pesquisa pública poderá ser realizada por qualquer pessoa mesmo sem API_KEY 
       "email": "annrnre@u*******",
       "address": "rua e*******"
     }
-  ]
+  ],
   "total": 1
 }
 ```
@@ -120,7 +120,7 @@ AgendaName - nome da agenda atrelada ao contato ou parte dele
 
 A páginação foi feita de forma similar a como funciona o Linkedin (que usei de inspiração por nenhuma razão), a listagem máxima exibida serão de 10 contatos e a listagem do número total encontrado.
 
-Para a visualização dos próximos 10 a variável start_from deverá ser enviada com o valor 10, 20, 30 ...
+Para a visualização dos próximos 10 o parâmetro start_from deverá ser enviada com o valor 10, 20, 30 ...
 
 Podendo ser um valor no meio também, exemplo 5 que mostrará a partir da quinta linha ate a 15 
 
